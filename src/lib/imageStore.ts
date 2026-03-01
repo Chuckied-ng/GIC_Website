@@ -50,10 +50,10 @@ const defaultImages: Record<string, string> = {
 
   // ABOUT PAGE
   'about-hero': 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=800&q=80',
-  'about-story-1': '/about-us-1.jpeg',
-  'about-story-2': '/about-us-3.jpeg',
-  'about-story-3': '/about-us-1.jpeg',
-  'about-story-4': '/about-us-4.jpeg',
+  'about-story-1': 'https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=600&q=80',
+  'about-story-2': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=600&q=80',
+  'about-story-3': 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=600&q=80',
+  'about-story-4': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80',
   'about-capabilities-main': 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800&q=80',
   'about-capabilities-left': 'https://images.unsplash.com/photo-1590959651373-a3db0f38a961?w=600&q=80',
   'about-capabilities-right': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80',
