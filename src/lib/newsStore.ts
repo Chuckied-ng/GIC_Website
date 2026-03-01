@@ -19,13 +19,15 @@ export interface NewsArticle {
 }
 
 const STORAGE_KEY = 'gic_news_articles';
+const STORAGE_VERSION = 'v2';
+const VERSION_KEY = 'gic_news_version';
 
 const defaultArticles: NewsArticle[] = [
   {
     id: 1,
     date: '19 August 2025',
     title: 'Engineering Excellence: A Smart Solution for Modern Projects',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1485083269755-a7b559a4fe5e?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8RW5naW5lZXJpbmd8ZW58MHx8MHx8fDA%3D',
     excerpt: 'Discover how our innovative engineering approaches are transforming complex industrial challenges into streamlined, cost-effective solutions.',
     category: 'Engineering',
     readTime: '5 min read',
@@ -48,32 +50,32 @@ const defaultArticles: NewsArticle[] = [
   {
     id: 2,
     date: '19 August 2025',
-    title: 'Affordable EPCI Solutions Now Within Reach',
-    image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1200&q=80',
-    excerpt: 'Learn about our comprehensive EPCI services that deliver exceptional value without compromising on quality or safety standards.',
-    category: 'EPCI Solutions',
+    title: 'Affordable EPC Solutions Now Within Reach',
+    image: 'https://plus.unsplash.com/premium_photo-1661963032306-91ef5261511d?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZW5naW5lZXJpbmclMjBvcGVyYXRpb25zfGVufDB8fDB8fHww',
+    excerpt: 'Learn about our comprehensive EPC services that deliver exceptional value without compromising on quality or safety standards.',
+    category: 'EPC Solutions',
     readTime: '6 min read',
     author: 'GIC Project Management',
     content: [
-      { type: 'paragraph', text: 'Engineering, Procurement, Construction, and Installation (EPCI) projects have traditionally been associated with substantial capital investment and extended timelines. However, GIC Oil & Gas Services Limited is revolutionizing the EPCI landscape by delivering comprehensive solutions that maintain the highest quality standards while significantly reducing costs and accelerating project delivery.' },
-      { type: 'heading', text: 'The Traditional EPCI Challenge' },
-      { type: 'paragraph', text: 'Historically, EPCI projects have suffered from several pain points: fragmented workflows between engineering, procurement, and construction teams; inefficient resource allocation; extended lead times for specialized equipment; and unpredictable cost escalations. These challenges have made EPCI solutions appear out of reach for many mid-sized operators.' },
+      { type: 'paragraph', text: 'Engineering, Procurement, and Construction (EPC) projects have traditionally been associated with substantial capital investment and extended timelines. However, GIC Oil & Gas Services Limited is revolutionizing the EPC landscape by delivering comprehensive solutions that maintain the highest quality standards while significantly reducing costs and accelerating project delivery.' },
+      { type: 'heading', text: 'The Traditional EPC Challenge' },
+      { type: 'paragraph', text: 'Historically, EPC projects have suffered from several pain points: fragmented workflows between engineering, procurement, and construction teams; inefficient resource allocation; extended lead times for specialized equipment; and unpredictable cost escalations. These challenges have made EPC solutions appear out of reach for many mid-sized operators.' },
       { type: 'heading', text: 'Our Integrated Approach' },
-      { type: 'paragraph', text: 'We\'ve developed an integrated EPCI methodology that breaks down traditional silos and creates a unified project delivery framework. Our approach includes:' },
+      { type: 'paragraph', text: 'We\'ve developed an integrated EPC methodology that breaks down traditional silos and creates a unified project delivery framework. Our approach includes:' },
       { type: 'list', items: ['Concurrent engineering and procurement planning to eliminate waiting periods', 'Strategic supplier partnerships that guarantee competitive pricing and reliable delivery', 'Prefabrication and modular construction techniques that reduce on-site work by 40%', 'Risk-sharing commercial models that align our success with client outcomes', 'Value engineering workshops that identify cost optimization opportunities without compromising quality'] },
       { type: 'heading', text: 'Cost Optimization Without Compromise' },
       { type: 'paragraph', text: 'Our recent gas processing facility project demonstrates the power of our approach. By optimizing the procurement sequence and implementing modular construction, we delivered a turnkey facility for 23% less than the initial estimate, while maintaining ISO 9001 quality standards and achieving commissioning two months ahead of schedule.' },
       { type: 'paragraph', text: 'We achieved these results through meticulous planning, strategic sourcing, and leveraging our extensive network of pre-qualified suppliers and subcontractors. Our procurement team negotiated volume discounts and favorable payment terms that translated directly into client savings.' },
-      { type: 'heading', text: 'Making EPCI Accessible' },
-      { type: 'paragraph', text: 'Today, our affordable EPCI solutions are accessible to a broader range of clients, from independent operators to established multinationals. We offer flexible commercial structures, including fixed-price turnkey contracts, cost-plus arrangements, and hybrid models that distribute risk appropriately.' },
-      { type: 'paragraph', text: 'Our commitment is clear: delivering exceptional EPCI value that empowers our clients to execute their projects with confidence, knowing they have a partner dedicated to quality, safety, and fiscal responsibility.' }
+      { type: 'heading', text: 'Making EPC Accessible' },
+      { type: 'paragraph', text: 'Today, our affordable EPC solutions are accessible to a broader range of clients, from independent operators to established multinationals. We offer flexible commercial structures, including fixed-price turnkey contracts, cost-plus arrangements, and hybrid models that distribute risk appropriately.' },
+      { type: 'paragraph', text: 'Our commitment is clear: delivering exceptional EPC value that empowers our clients to execute their projects with confidence, knowing they have a partner dedicated to quality, safety, and fiscal responsibility.' }
     ]
   },
   {
     id: 3,
     date: '19 August 2025',
     title: 'How Engineering Innovation Shapes a Sustainable Future',
-    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1515344905723-babc01aac23d?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fHN1c3RhaW5hYmlsaXR5fGVufDB8fDB8fHww',
     excerpt: 'Explore our commitment to sustainable practices and how we integrate environmental responsibility into every project phase.',
     category: 'Sustainability',
     readTime: '7 min read',
@@ -97,7 +99,7 @@ const defaultArticles: NewsArticle[] = [
     id: 4,
     date: '19 August 2025',
     title: 'Projects that Define the Impact of Innovation',
-    image: 'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1474631245212-32dc3c8310c6?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGlubm92YXRpb258ZW58MHx8MHx8fDA%3D',
     excerpt: 'A closer look at landmark projects showcasing cutting-edge technology and exceptional execution standards.',
     category: 'Projects',
     readTime: '8 min read',
@@ -208,7 +210,7 @@ const defaultArticles: NewsArticle[] = [
       { type: 'list', items: ['Cloud-based project management platform accessible from any location', 'IoT sensors monitoring equipment performance, environmental conditions, and safety parameters', 'Mobile applications enabling field workers to report progress, issues, and observations in real-time', 'AI-powered predictive analytics identifying potential delays and cost overruns before they occur', 'Digital twin technology creating virtual replicas of facilities for simulation and optimization', 'Blockchain-based supply chain tracking ensuring transparency and authenticity', 'Virtual and augmented reality for training, design review, and remote assistance'] },
       { type: 'heading', text: 'Real-World Impact' },
       { type: 'paragraph', text: 'Our digital transformation initiatives deliver measurable benefits. On a recent offshore platform project, IoT sensors detected an anomaly in crane hydraulics three days before conventional inspection would have identified the issue. This early detection prevented a potential equipment failure that would have caused a two-week delay and significant cost overruns.' },
-      { type: 'paragraph', text: 'Our AI-powered scheduling system analyzes thousands of variables to optimize resource allocation and task sequencing. On a major EPCI project, this system identified optimization opportunities that reduced overall project duration by 18 days while improving resource utilization by 23%.' },
+      { type: 'paragraph', text: 'Our AI-powered scheduling system analyzes thousands of variables to optimize resource allocation and task sequencing. On a major EPC project, this system identified optimization opportunities that reduced overall project duration by 18 days while improving resource utilization by 23%.' },
       { type: 'heading', text: 'The Human Element' },
       { type: 'paragraph', text: 'While we embrace technology, we recognize that people remain at the heart of project success. Digital tools empower our teams by eliminating repetitive tasks, providing better information for decision-making, and enabling focus on high-value activities that require human judgment and creativity.' },
       { type: 'paragraph', text: 'Digital transformation is not a destination—it\'s a continuous journey of improvement and innovation. We remain committed to exploring emerging technologies, adapting best practices, and leveraging digital capabilities to deliver exceptional value to our clients in an increasingly connected industrial world.' }
@@ -240,8 +242,15 @@ const defaultArticles: NewsArticle[] = [
   }
 ];
 
-// Initialize store with defaults if empty
+// Initialize store with defaults if empty or version mismatch
 function initializeStore(): NewsArticle[] {
+  const storedVersion = localStorage.getItem(VERSION_KEY);
+  if (storedVersion !== STORAGE_VERSION) {
+    // New deployment - reset to latest defaults
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultArticles));
+    localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+    return defaultArticles;
+  }
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultArticles));

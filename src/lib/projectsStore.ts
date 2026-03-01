@@ -13,78 +13,87 @@ export interface Project {
 }
 
 const STORAGE_KEY = 'gic_projects';
+const STORAGE_VERSION = 'v2';
+const VERSION_KEY = 'gic_projects_version';
 
 const defaultProjects: Project[] = [
   {
     id: 1,
-    title: 'Offshore Platform Upgrade',
-    category: 'Offshore',
-    location: 'Niger Delta, Nigeria',
-    year: '2023',
-    value: '$45M',
-    scope: 'Complete process facilities upgrade including separation systems, compression units, and utility modules.',
-    image: 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
+    title: 'Oando - Road Rehabilitation',
+    category: 'Onshore',
+    location: 'Rivers State, Nigeria',
+    year: '2024',
+    value: '$1M',
+    scope: 'Major civil works and rehabilitation of Akiri main road to drilling facility.',
+    image: 'https://plus.unsplash.com/premium_photo-1661943489715-ea5e9dac7852?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     status: 'Completed',
   },
   {
     id: 2,
-    title: 'Pipeline Installation Project',
+    title: 'Aiteo - Pipe fabrication and Waste management',
     category: 'Pipeline',
-    location: 'Gulf of Guinea',
-    year: '2022',
-    value: '$32M',
-    scope: '85km subsea pipeline installation from offshore platform to shore terminal.',
-    image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80',
+    location: 'OML 27, Bayelsa State',
+    year: '2023',
+    value: '$3M',
+    scope: 'Pipe fabrication and Waste management',
+    image: 'https://images.unsplash.com/photo-1689476814887-43b4a7dc34e8?q=80&w=2274&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     status: 'Completed',
   },
   {
     id: 3,
-    title: 'Gas Processing Facility',
+    title: 'Shell - Waste Management',
     category: 'Processing',
-    location: 'Port Harcourt, Nigeria',
-    year: '2023',
-    value: '$68M',
-    scope: 'EPCI delivery of 150 MMscfd gas processing facility with LPG recovery and export systems.',
-    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&q=80',
+    location: 'Bayelsa State, Nigeria',
+    year: '2018',
+    value: '$800k',
+    scope: 'Waste management and procurement of pipe flex',
+    image: 'https://images.unsplash.com/photo-1718642482960-77cfc3a4e2e5?q=80&w=2274&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     status: 'Completed',
   },
   {
     id: 4,
-    title: 'FPSO Topside Fabrication',
-    category: 'Offshore',
+    title: 'Renaissance - Human Capital Development',
+    category: 'Onshore',
     location: 'Onne, Rivers State',
-    year: '2021',
-    value: '$92M',
-    scope: 'Fabrication and integration of 12,000-ton topside modules for FPSO conversion.',
-    image: 'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=800&q=80',
-    status: 'Completed',
+    year: '2026',
+    value: '$3M',
+    scope: 'Major civil works',
+    image: 'https://images.unsplash.com/photo-1605475723788-08c82657b6af?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    status: 'Ongoing',
   },
   {
     id: 5,
-    title: 'Tank Farm Construction',
-    category: 'Storage',
-    location: 'Lagos, Nigeria',
-    year: '2022',
-    value: '$28M',
-    scope: 'Construction of 150,000 bbl crude storage tank farm including foundations, tanks, and piping.',
-    image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=800&q=80',
+    title: 'World bank - Erosion Control',
+    category: 'QHSE',
+    location: 'Owerri, Imo State, Nigeria.',
+    year: '2014',
+    value: '$250k',
+    scope: 'Procurement and Installation of equipment for erosion control.',
+    image: 'https://images.unsplash.com/photo-1767690594466-eba6f79551b9?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     status: 'Completed',
   },
   {
     id: 6,
-    title: 'Subsea Manifold Installation',
+    title: 'Shell - Waste Management',
     category: 'Subsea',
-    location: 'Offshore Nigeria',
-    year: '2023',
-    value: '$54M',
-    scope: 'Installation of 4-slot subsea production manifold at 1,200m water depth.',
-    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80',
-    status: 'Ongoing',
+    location: 'Kidney Island, Rivers State',
+    year: '2009',
+    value: '$1M',
+    scope: 'Waste Management',
+    image: 'https://images.unsplash.com/photo-1584968329412-cf2026fc7c3d?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    status: 'Completed',
   },
 ];
 
-// Initialize store with defaults if empty
+// Initialize store with defaults if empty or version mismatch
 function initializeStore(): Project[] {
+  const storedVersion = localStorage.getItem(VERSION_KEY);
+  if (storedVersion !== STORAGE_VERSION) {
+    // New deployment - reset to latest defaults
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProjects));
+    localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+    return defaultProjects;
+  }
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProjects));
