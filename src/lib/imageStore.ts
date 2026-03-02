@@ -1,5 +1,12 @@
-// Centralized image store for managing all website images from the CMS
-// Images are stored in localStorage so changes persist across sessions
+// Centralized image store — uses Supabase as source of truth so all changes
+// are immediately visible to every visitor, not just the browser that made them.
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL as string,
+  import.meta.env.VITE_SUPABASE_ANON_KEY as string
+);
 
 export interface SiteImage {
   key: string;
@@ -26,87 +33,87 @@ export type PageImageConfig = {
 // Default images used across the site
 const defaultImages: Record<string, string> = {
   // HOME PAGE
-  'home-hero-bg': 'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=1920&q=80',
-  'home-cta-banner-bg': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1920&q=80',
-  'home-cta-bg': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1920&q=80',
-  'home-mission-vision': 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&q=80',
+  'home-hero-bg': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1920&q=80',
+  'home-cta-banner-bg': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1920&q=80',
+  'home-cta-bg': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1920&q=80',
+  'home-mission-vision': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&q=80',
   'home-service-engineering': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80',
   'home-service-procurement': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
-  'home-service-construction': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
+  'home-service-construction': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
   'home-service-marine': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
-  'home-product-1': 'https://images.unsplash.com/photo-1720670970467-76da25e49a00?w=600&q=80',
-  'home-product-2': 'https://images.unsplash.com/photo-1683617521340-3e8d3fe50d41?w=600&q=80',
-  'home-product-3': 'https://images.unsplash.com/photo-1703131168651-f6f86e504c04?w=600&q=80',
-  'home-product-4': 'https://images.unsplash.com/photo-1768887629709-314-4b310-3a45?w=600&q=80',
-  'home-product-5': 'https://images.unsplash.com/photo-1768154460457-af17e61d1d5e?w=600&q=80',
-  'home-product-6': 'https://images.unsplash.com/photo-1673616297435-6a39908fa9e4?w=600&q=80',
-  'home-product-7': 'https://images.unsplash.com/photo-1603460034343-d2b83be9c325?w=600&q=80',
-  'home-product-8': 'https://images.unsplash.com/photo-1673151546841-8f0dcbc14e38?w=600&q=80',
-  'home-about-1': 'https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=600&q=80',
+  'home-product-1': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=600&q=80',
+  'home-product-2': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&q=80',
+  'home-product-3': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80',
+  'home-product-4': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=600&q=80',
+  'home-product-5': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=600&q=80',
+  'home-product-6': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=600&q=80',
+  'home-product-7': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80',
+  'home-product-8': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=600&q=80',
+  'home-about-1': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=600&q=80',
   'home-about-2': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&q=80',
   'home-testimonial-1': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
   'home-testimonial-2': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
   'home-testimonial-3': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80',
 
   // ABOUT PAGE
-  'about-hero': 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=800&q=80',
-  'about-story-1': 'https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=600&q=80',
-  'about-story-2': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=600&q=80',
-  'about-story-3': 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=600&q=80',
-  'about-story-4': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80',
-  'about-capabilities-main': 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800&q=80',
-  'about-capabilities-left': 'https://images.unsplash.com/photo-1590959651373-a3db0f38a961?w=600&q=80',
-  'about-capabilities-right': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80',
-  'about-certifications': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
-  'about-local-content': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
-  'about-hse': 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
+  'about-hero': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
+  'about-story-1': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=600&q=80',
+  'about-story-2': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&q=80',
+  'about-story-3': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=600&q=80',
+  'about-story-4': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80',
+  'about-capabilities-main': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
+  'about-capabilities-left': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=600&q=80',
+  'about-capabilities-right': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80',
+  'about-certifications': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
+  'about-local-content': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80',
+  'about-hse': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
 
   // SERVICES PAGE (Engineering)
   'services-eng-hero': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80',
   'services-eng-process': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
-  'services-eng-structural': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
-  'services-eng-electrical': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
+  'services-eng-structural': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
+  'services-eng-electrical': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
 
   // SERVICES PAGES (Procurement, Construction, Marine, Dredging, Waste Management)
   'services-procurement-hero': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
   'services-procurement-supply': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
-  'services-procurement-vendor': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
-  'services-construction-hero': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
+  'services-procurement-vendor': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+  'services-construction-hero': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
   'services-construction-installation': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
-  'services-construction-project': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
-  'services-construction-advantage': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
+  'services-construction-project': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
+  'services-construction-advantage': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
   'services-marine-hero': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
   'services-marine-installation': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80',
-  'services-marine-maintenance': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80',
-  'services-marine-fleet-main': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
+  'services-marine-maintenance': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
+  'services-marine-fleet-main': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80',
   'services-marine-fleet-left': 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=600&q=80',
-  'services-marine-fleet-right': 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=600&q=80',
-  'services-dredging-hero': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80',
-  'services-dredging-environmental': 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&q=80',
-  'services-dredging-sediment': 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&q=80',
-  'services-waste-hero': 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800&q=80',
-  'services-waste-treatment': 'https://images.unsplash.com/photo-1532996122724-8f3c2cd83c5d?w=800&q=80',
-  'services-waste-disposal': 'https://images.unsplash.com/photo-1532996122724-8f3c2cd83c5d?w=800&q=80',
-  'services-waste-hse': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+  'services-marine-fleet-right': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=600&q=80',
+  'services-dredging-hero': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+  'services-dredging-environmental': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+  'services-dredging-sediment': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+  'services-waste-hero': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
+  'services-waste-treatment': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+  'services-waste-disposal': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+  'services-waste-hse': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
 
   // PRODUCTS PAGES (Industrial Equipment, Marine Equipment, Safety Systems)
   'products-industrial-hero': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
-  'products-industrial-pumps': 'https://images.unsplash.com/photo-1720670970467-76da25e49a00?w=800&q=80',
-  'products-industrial-compressors': 'https://images.unsplash.com/photo-1683617521340-3e8d3fe50d41?w=800&q=80',
-  'products-industrial-tanks': 'https://images.unsplash.com/photo-1703131168651-f6f86e504c04?w=800&q=80',
-  'products-marine-hero': 'https://images.unsplash.com/photo-1605731414994-0cc2a3c8fc67?w=800&q=80',
-  'products-marine-subsea': 'https://images.unsplash.com/photo-1768887629709-314-4b310-3a45?w=800&q=80',
-  'products-marine-topside': 'https://images.unsplash.com/photo-1768154460457-af17e61d1d5e?w=800&q=80',
-  'products-marine-pipelines': 'https://images.unsplash.com/photo-1673616297435-6a39908fa9e4?w=800&q=80',
-  'products-marine-compliance': 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&q=80',
-  'products-safety-hero': 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
-  'products-safety-personal': 'https://images.unsplash.com/photo-1603460034343-d2b83be9c325?w=800&q=80',
-  'products-safety-fire': 'https://images.unsplash.com/photo-1673151546841-8f0dcbc14e38?w=800&q=80',
-  'products-safety-monitoring': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80',
+  'products-industrial-pumps': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+  'products-industrial-compressors': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
+  'products-industrial-tanks': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+  'products-marine-hero': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
+  'products-marine-subsea': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80',
+  'products-marine-topside': 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
+  'products-marine-pipelines': 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&q=80',
+  'products-marine-compliance': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80',
+  'products-safety-hero': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
+  'products-safety-personal': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
+  'products-safety-fire': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+  'products-safety-monitoring': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
   'products-safety-compliance': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80',
 
   // CONTACT PAGE
-  'contact-hero': 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80',
+  'contact-hero': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
 
   // PARTNERS LOGOS
   'partner-shell': '/shell-logo.png',
@@ -120,103 +127,155 @@ const defaultImages: Record<string, string> = {
   'partner-renaissance': '/renaissance-logo.png',
 };
 
-const STORAGE_KEY = 'gic-site-images';
+// In-memory cache populated from Supabase on init, updated in real-time
+const imageCache: Record<string, string> = { ...defaultImages };
 
-// In-memory store for images that may be too large for localStorage (e.g., base64 uploads)
-// This ensures uploaded images display on the site even if localStorage quota is exceeded.
-const memoryStore: Record<string, string> = {};
+// Listeners for React hooks
+type ImageListener = (key: string, url: string) => void;
+const listeners = new Set<ImageListener>();
 
-// Get all stored image overrides from localStorage
-function getStoredImages(): Record<string, string> {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch {
-    return {};
-  }
+function notifyListeners(key: string, url: string) {
+  listeners.forEach((fn) => fn(key, url));
 }
 
-// Save image overrides to localStorage (with error handling for quota limits)
-function saveStoredImages(images: Record<string, string>) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(images));
-  } catch (e) {
-    // localStorage quota exceeded — attempt to save only non-data-URL entries
-    // Data URLs (base64 uploads) are kept in memoryStore instead
-    console.warn('localStorage quota exceeded, saving non-data-URL entries only', e);
-    const filtered: Record<string, string> = {};
-    for (const [k, v] of Object.entries(images)) {
-      if (!v.startsWith('data:')) {
-        filtered[k] = v;
+export function subscribeToImages(fn: ImageListener) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+// Load all overrides from Supabase on startup and subscribe to real-time updates
+let initialized = false;
+let initPromise: Promise<void> | null = null;
+
+export function initImageStore(): Promise<void> {
+  if (initialized) return Promise.resolve();
+  if (initPromise) return initPromise;
+
+  initPromise = supabase
+    .from('site_images')
+    .select('key, url')
+    .then(({ data }) => {
+      if (data) {
+        data.forEach(({ key, url }: { key: string; url: string }) => {
+          imageCache[key] = url;
+        });
       }
-    }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-    } catch {
-      // Still too large — skip localStorage entirely
-      console.warn('localStorage save failed entirely, using memory store only');
-    }
-  }
+      initialized = true;
+
+      // Subscribe to realtime changes
+      supabase
+        .channel('site_images_changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'site_images' },
+          (payload) => {
+            if (payload.eventType === 'DELETE') {
+              const key = (payload.old as { key: string }).key;
+              imageCache[key] = defaultImages[key] || '';
+              notifyListeners(key, imageCache[key]);
+            } else {
+              const { key, url } = payload.new as { key: string; url: string };
+              imageCache[key] = url;
+              notifyListeners(key, url);
+            }
+          }
+        )
+        .subscribe();
+    })
+    .catch((err) => {
+      console.error('Failed to init image store:', err);
+    });
+
+  return initPromise;
 }
 
-// Get an image URL by key - checks memory store first, then localStorage, then defaults
+// Kick off init immediately when module loads
+initImageStore();
+
+// Get image URL by key
 export function getImage(key: string): string {
-  // Memory store takes priority (holds uploads that may not fit in localStorage)
-  if (memoryStore[key]) {
-    return memoryStore[key];
+  return imageCache[key] || defaultImages[key] || '';
+}
+
+// Set image URL via Supabase (from a URL string)
+export async function setImage(key: string, url: string): Promise<void> {
+  // Optimistic local update
+  imageCache[key] = url;
+  notifyListeners(key, url);
+
+  const { error } = await supabase
+    .from('site_images')
+    .upsert({ key, url, updated_at: new Date().toISOString() });
+
+  if (error) {
+    console.error('Failed to save image:', error);
+    throw error;
   }
-  const stored = getStoredImages();
-  return stored[key] || defaultImages[key] || '';
 }
 
-// Set an image URL by key
-export function setImage(key: string, url: string) {
-  // Always store in memory for immediate availability
-  memoryStore[key] = url;
+// Upload a file to Supabase Storage via edge function and persist the public URL
+export async function uploadImage(key: string, file: File): Promise<string> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-  // Also persist to localStorage
-  const stored = getStoredImages();
-  stored[key] = url;
-  saveStoredImages(stored);
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('key', key);
 
-  // Dispatch custom event so components can react
-  window.dispatchEvent(new CustomEvent('site-images-updated', { detail: { key, url } }));
+  const res = await fetch(
+    `${supabaseUrl}/functions/v1/supabase-functions-upload-site-image`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${supabaseAnonKey}`,
+        apikey: supabaseAnonKey,
+      },
+      body: formData,
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(err.error || 'Upload failed');
+  }
+
+  const { url } = await res.json();
+
+  // Optimistic local update (realtime will also fire shortly after)
+  imageCache[key] = url;
+  notifyListeners(key, url);
+
+  return url;
 }
 
-// Reset an image to its default
-export function resetImage(key: string) {
-  delete memoryStore[key];
-  const stored = getStoredImages();
-  delete stored[key];
-  saveStoredImages(stored);
-  window.dispatchEvent(new CustomEvent('site-images-updated', { detail: { key, url: defaultImages[key] } }));
+// Reset a single image to its default
+export async function resetImage(key: string): Promise<void> {
+  imageCache[key] = defaultImages[key] || '';
+  notifyListeners(key, imageCache[key]);
+  await supabase.from('site_images').delete().eq('key', key);
 }
 
 // Reset all images to defaults
-export function resetAllImages() {
-  // Clear memory store
-  for (const key of Object.keys(memoryStore)) {
-    delete memoryStore[key];
-  }
-  localStorage.removeItem(STORAGE_KEY);
-  window.dispatchEvent(new CustomEvent('site-images-updated', { detail: { key: 'all', url: '' } }));
+export async function resetAllImages(): Promise<void> {
+  Object.keys(defaultImages).forEach((key) => {
+    imageCache[key] = defaultImages[key];
+  });
+  notifyListeners('all', '');
+  await supabase.from('site_images').delete().neq('key', '');
 }
 
-// Get all images for a specific page
+// Get all images (from cache)
 export function getAllImages(): Record<string, string> {
-  const stored = getStoredImages();
   const result: Record<string, string> = {};
   for (const key of Object.keys(defaultImages)) {
-    result[key] = memoryStore[key] || stored[key] || defaultImages[key];
+    result[key] = imageCache[key] || defaultImages[key];
   }
   return result;
 }
 
-// Check if an image has been customized
+// Check if an image has been customized (differs from default)
 export function isImageCustomized(key: string): boolean {
-  if (memoryStore[key]) return true;
-  const stored = getStoredImages();
-  return key in stored;
+  return imageCache[key] !== undefined && imageCache[key] !== defaultImages[key];
 }
 
 // Get default image URL

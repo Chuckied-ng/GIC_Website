@@ -1,26 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getImage, getAllImages } from '@/lib/imageStore';
+import { useState, useEffect } from 'react';
+import { getImage, getAllImages, subscribeToImages } from '@/lib/imageStore';
 
-// Hook to get a single image URL that updates when the image store changes
+// Hook to get a single image URL that updates in real-time via Supabase
 export function useSiteImage(key: string): string {
   const [url, setUrl] = useState(() => getImage(key));
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail.key === key || detail.key === 'all') {
-        setUrl(getImage(key));
+    setUrl(getImage(key));
+    const unsub = subscribeToImages((updatedKey, updatedUrl) => {
+      if (updatedKey === key || updatedKey === 'all') {
+        setUrl(updatedKey === 'all' ? getImage(key) : updatedUrl);
       }
-    };
-    window.addEventListener('site-images-updated', handler);
-    return () => window.removeEventListener('site-images-updated', handler);
+    });
+    return unsub;
   }, [key]);
 
   return url;
 }
 
-// Hook to get multiple image URLs that update when any image changes
+// Hook to get multiple image URLs that update in real-time
 export function useSiteImages(keys: string[]): Record<string, string> {
+  const keysStr = keys.join(',');
   const [images, setImages] = useState<Record<string, string>>(() => {
     const result: Record<string, string> = {};
     keys.forEach(k => { result[k] = getImage(k); });
@@ -28,14 +28,20 @@ export function useSiteImages(keys: string[]): Record<string, string> {
   });
 
   useEffect(() => {
-    const handler = () => {
-      const result: Record<string, string> = {};
-      keys.forEach(k => { result[k] = getImage(k); });
-      setImages(result);
-    };
-    window.addEventListener('site-images-updated', handler);
-    return () => window.removeEventListener('site-images-updated', handler);
-  }, [keys.join(',')]);
+    const result: Record<string, string> = {};
+    keys.forEach(k => { result[k] = getImage(k); });
+    setImages(result);
+
+    const unsub = subscribeToImages((updatedKey) => {
+      if (keys.includes(updatedKey) || updatedKey === 'all') {
+        const updated: Record<string, string> = {};
+        keys.forEach(k => { updated[k] = getImage(k); });
+        setImages(updated);
+      }
+    });
+    return unsub;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keysStr]);
 
   return images;
 }
@@ -45,11 +51,11 @@ export function useAllSiteImages(): Record<string, string> {
   const [images, setImages] = useState<Record<string, string>>(() => getAllImages());
 
   useEffect(() => {
-    const handler = () => {
+    setImages(getAllImages());
+    const unsub = subscribeToImages(() => {
       setImages(getAllImages());
-    };
-    window.addEventListener('site-images-updated', handler);
-    return () => window.removeEventListener('site-images-updated', handler);
+    });
+    return unsub;
   }, []);
 
   return images;

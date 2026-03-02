@@ -19,6 +19,7 @@ import {
 } from '@/lib/projectsStore';
 import {
   setImage,
+  uploadImage,
   resetImage,
   resetAllImages,
   isImageCustomized,
@@ -92,6 +93,8 @@ const AdminDashboard = () => {
   const [editingImageKey, setEditingImageKey] = useState<string | null>(null);
   const [imageEditTab, setImageEditTab] = useState<Record<string, 'url' | 'upload'>>({});
   const [uploadPreviews, setUploadPreviews] = useState<Record<string, string>>({});
+  const [uploadFiles, setUploadFiles] = useState<Record<string, File>>({});
+  const [savingImage, setSavingImage] = useState<string | null>(null);
 
   if (!isAuthenticated) {
     return <Navigate to="/admin" replace />;
@@ -1118,11 +1121,12 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-light text-slate-900">Manage Site Images</h2>
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (window.confirm('Reset ALL images to defaults? This cannot be undone.')) {
-                    resetAllImages();
+                    await resetAllImages();
                     setImageUrlInputs({});
                     setUploadPreviews({});
+                    setUploadFiles({});
                     setSaveMessage('All images reset to defaults!');
                     setTimeout(() => setSaveMessage(''), 2000);
                   }
@@ -1276,7 +1280,10 @@ const AdminDashboard = () => {
                                                 reader.onload = (ev) => {
                                                   const dataUrl = ev.target?.result as string;
                                                   setUploadPreviews({ ...uploadPreviews, [img.key]: dataUrl });
-                                                  setImageUrlInputs({ ...imageUrlInputs, [img.key]: dataUrl });
+                                                  // Store the actual File object for uploading
+                                                  setUploadFiles({ ...uploadFiles, [img.key]: file });
+                                                  // Clear URL input since we'll use the file
+                                                  setImageUrlInputs({ ...imageUrlInputs, [img.key]: '__file__' });
                                                 };
                                                 reader.readAsDataURL(file);
                                               }
@@ -1288,6 +1295,9 @@ const AdminDashboard = () => {
                                             onClick={() => {
                                               setUploadPreviews({ ...uploadPreviews, [img.key]: '' });
                                               setImageUrlInputs({ ...imageUrlInputs, [img.key]: '' });
+                                              const newFiles = { ...uploadFiles };
+                                              delete newFiles[img.key];
+                                              setUploadFiles(newFiles);
                                             }}
                                             className="mt-1 text-[11px] text-gray-400 hover:text-red-600 transition-colors"
                                           >
@@ -1300,27 +1310,62 @@ const AdminDashboard = () => {
                                     {/* Action Buttons */}
                                     <div className="flex items-center gap-2">
                                       <button
-                                        onClick={() => {
-                                          if (inputUrl.trim()) {
-                                            setImage(img.key, inputUrl.trim());
+                                        onClick={async () => {
+                                          const isFileUpload = inputUrl === '__file__' && uploadFiles[img.key];
+                                          const isUrlInput = inputUrl.trim() && inputUrl !== '__file__';
+                                          if (!isFileUpload && !isUrlInput) return;
+                                          setSavingImage(img.key);
+                                          try {
+                                            if (isFileUpload) {
+                                              await uploadImage(img.key, uploadFiles[img.key]);
+                                            } else {
+                                              await setImage(img.key, inputUrl.trim());
+                                            }
                                             setSaveMessage(`${img.label} updated!`);
                                             setTimeout(() => setSaveMessage(''), 2000);
+                                          } catch (err) {
+                                            setSaveMessage(`Error saving: ${String(err)}`);
+                                            setTimeout(() => setSaveMessage(''), 4000);
+                                          } finally {
+                                            setSavingImage(null);
                                           }
                                           setEditingImageKey(null);
                                           setImageUrlInputs({ ...imageUrlInputs, [img.key]: '' });
                                           setUploadPreviews({ ...uploadPreviews, [img.key]: '' });
+                                          const newFiles2 = { ...uploadFiles };
+                                          delete newFiles2[img.key];
+                                          setUploadFiles(newFiles2);
                                         }}
-                                        disabled={!inputUrl.trim()}
+                                        disabled={
+                                          savingImage === img.key ||
+                                          !inputUrl.trim() ||
+                                          (inputUrl === '__file__' && !uploadFiles[img.key])
+                                        }
                                         className="flex-1 inline-flex items-center justify-center gap-1.5 bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
-                                        <Check className="w-3 h-3" />
-                                        Save
+                                        {savingImage === img.key ? (
+                                          <span className="flex items-center gap-1.5">
+                                            <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
+                                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                            </svg>
+                                            Saving…
+                                          </span>
+                                        ) : (
+                                          <>
+                                            <Check className="w-3 h-3" />
+                                            Save
+                                          </>
+                                        )}
                                       </button>
                                       <button
                                         onClick={() => {
                                           setEditingImageKey(null);
                                           setImageUrlInputs({ ...imageUrlInputs, [img.key]: '' });
                                           setUploadPreviews({ ...uploadPreviews, [img.key]: '' });
+                                          const newFiles2 = { ...uploadFiles };
+                                          delete newFiles2[img.key];
+                                          setUploadFiles(newFiles2);
                                         }}
                                         className="px-3 py-2 border border-gray-300 text-gray-600 rounded-lg text-xs hover:bg-gray-50 transition-colors"
                                       >
@@ -1346,8 +1391,8 @@ const AdminDashboard = () => {
                                       </button>
                                       {customized && (
                                         <button
-                                          onClick={() => {
-                                            resetImage(img.key);
+                                          onClick={async () => {
+                                            await resetImage(img.key);
                                             setSaveMessage(`${img.label} reset to default!`);
                                             setTimeout(() => setSaveMessage(''), 2000);
                                           }}

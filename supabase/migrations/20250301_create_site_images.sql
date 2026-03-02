@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS site_images (
+  key TEXT PRIMARY KEY,
+  url TEXT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE site_images REPLICA IDENTITY FULL;
+
+DROP PUBLICATION IF EXISTS supabase_realtime CASCADE;
+CREATE PUBLICATION supabase_realtime FOR TABLE site_images;
