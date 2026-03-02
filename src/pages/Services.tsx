@@ -2,13 +2,14 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Wrench, ShoppingCart, HardHat, Anchor } from 'lucide-react';
+import { useSiteImages } from '@/hooks/useSiteImage';
 
-const servicesData = [
+const servicesStaticData = [
   {
     icon: Wrench,
     title: 'Engineering Services',
     description: 'Comprehensive engineering design from conceptual studies through detailed engineering, covering all major disciplines for oil & gas facilities.',
-    image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80',
+    imageKey: 'services-eng-hero',
     path: '/services/engineering',
     capabilities: [
       'Process Design & Optimization',
@@ -23,7 +24,7 @@ const servicesData = [
     icon: ShoppingCart,
     title: 'Procurement',
     description: 'Strategic sourcing and supply chain management to ensure your project has the right materials, equipment, and vendors at the right time.',
-    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+    imageKey: 'services-procurement-hero',
     path: '/services/procurement',
     capabilities: [
       'Vendor Selection & Qualification',
@@ -38,7 +39,7 @@ const servicesData = [
     icon: HardHat,
     title: 'Construction & Installation',
     description: 'Turnkey construction management for onshore and offshore facilities with a focus on safety, quality, and schedule adherence.',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
+    imageKey: 'services-construction-hero',
     path: '/services/construction',
     capabilities: [
       'Fabrication & Module Assembly',
@@ -53,7 +54,7 @@ const servicesData = [
     icon: Anchor,
     title: 'Marine & Offshore',
     description: 'Specialized marine operations including subsea engineering, pipeline installation, and offshore logistics management.',
-    image: 'https://images.unsplash.com/photo-1578670812003-60745e2c2ea9?w=800&q=80',
+    imageKey: 'services-marine-hero',
     path: '/services/marine-offshore',
     capabilities: [
       'Subsea Engineering & Design',
@@ -67,6 +68,13 @@ const servicesData = [
 ];
 
 const Services = () => {
+  const images = useSiteImages([
+    'services-eng-hero',
+    'services-procurement-hero',
+    'services-construction-hero',
+    'services-marine-hero',
+    'services-overview-why-choose',
+  ]);
   return (
     <div className="min-h-screen">
       <Header />
@@ -93,14 +101,14 @@ const Services = () => {
       <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {servicesData.map((service, index) => {
+            {servicesStaticData.map((service, index) => {
               const IconComponent = service.icon;
               return (
                 <div key={index} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
                   {/* Image */}
                   <div className="relative h-64 overflow-hidden">
                     <img
-                      src={service.image}
+                      src={images[service.imageKey]}
                       alt={service.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -198,7 +206,7 @@ const Services = () => {
             </div>
             <div className="rounded-3xl overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80"
+                src={images['services-overview-why-choose']}
                 alt="Team at work"
                 className="w-full h-full object-cover"
               />

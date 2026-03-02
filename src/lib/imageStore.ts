@@ -84,6 +84,9 @@ const defaultImages: Record<string, string> = {
   'services-eng-structural': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
   'services-eng-electrical': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
 
+  // SERVICES OVERVIEW PAGE
+  'services-overview-why-choose': 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80',
+
   // SERVICES PAGES (Procurement, Construction, Marine, Dredging, Waste Management)
   'services-procurement-hero': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
   'services-procurement-supply': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
@@ -451,6 +454,13 @@ export const pageImageConfigs: PageImageConfig[] = [
     page: 'services',
     label: 'Services Pages',
     sections: [
+      {
+        section: 'overview',
+        label: 'Services Overview Page',
+        images: [
+          { key: 'services-overview-why-choose', label: 'Why Choose GIC Image', defaultUrl: defaultImages['services-overview-why-choose'] },
+        ],
+      },
       {
         section: 'engineering',
         label: 'Engineering Services',
