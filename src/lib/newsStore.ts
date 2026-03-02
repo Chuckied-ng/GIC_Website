@@ -1,4 +1,22 @@
-// News data store with localStorage persistence
+// News data store — uses Supabase as source of truth so all changes
+// are immediately visible to every visitor, not just the browser that made them.
+
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+let supabase: SupabaseClient | null = null;
+
+try {
+  if (supabaseUrl && supabaseAnonKey) {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  } else {
+    console.warn('Supabase credentials not found. News will use defaults.');
+  }
+} catch (err) {
+  console.error('Failed to create Supabase client for news:', err);
+}
 
 export interface NewsContentBlock {
   type: 'paragraph' | 'heading' | 'list';
@@ -18,9 +36,45 @@ export interface NewsArticle {
   content: NewsContentBlock[];
 }
 
-const STORAGE_KEY = 'gic_news_articles';
-const STORAGE_VERSION = 'v2';
-const VERSION_KEY = 'gic_news_version';
+// DB row shape (snake_case)
+interface NewsRow {
+  id: number;
+  date: string;
+  title: string;
+  image: string;
+  excerpt: string;
+  category: string;
+  read_time: string;
+  author: string;
+  content: NewsContentBlock[];
+}
+
+function rowToArticle(row: NewsRow): NewsArticle {
+  return {
+    id: row.id,
+    date: row.date,
+    title: row.title,
+    image: row.image,
+    excerpt: row.excerpt,
+    category: row.category,
+    readTime: row.read_time,
+    author: row.author,
+    content: row.content || [],
+  };
+}
+
+function articleToRow(article: Omit<NewsArticle, 'id'>) {
+  return {
+    date: article.date,
+    title: article.title,
+    image: article.image,
+    excerpt: article.excerpt,
+    category: article.category,
+    read_time: article.readTime,
+    author: article.author,
+    content: article.content,
+  };
+}
 
 const defaultArticles: NewsArticle[] = [
   {
@@ -242,27 +296,10 @@ const defaultArticles: NewsArticle[] = [
   }
 ];
 
-// Initialize store with defaults if empty or version mismatch
-function initializeStore(): NewsArticle[] {
-  const storedVersion = localStorage.getItem(VERSION_KEY);
-  if (storedVersion !== STORAGE_VERSION) {
-    // New deployment - reset to latest defaults
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultArticles));
-    localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
-    return defaultArticles;
-  }
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultArticles));
-    return defaultArticles;
-  }
-  try {
-    return JSON.parse(stored);
-  } catch {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultArticles));
-    return defaultArticles;
-  }
-}
+// In-memory cache populated from Supabase on init
+let articlesCache: NewsArticle[] = [...defaultArticles];
+let initialized = false;
+let initPromise: Promise<void> | null = null;
 
 // Event system for cross-component reactivity
 const listeners: Set<() => void> = new Set();
@@ -276,45 +313,164 @@ export function subscribeToNews(fn: () => void) {
   return () => listeners.delete(fn);
 }
 
+// Initialize from Supabase
+export function initNewsStore(): Promise<void> {
+  if (initialized) return Promise.resolve();
+  if (initPromise) return initPromise;
+
+  if (!supabase) {
+    initialized = true;
+    return Promise.resolve();
+  }
+
+  initPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) {
+        console.error('Failed to fetch news articles:', error.message);
+      }
+
+      if (data && data.length > 0) {
+        console.log(`Loaded ${data.length} news articles from database`);
+        articlesCache = data.map(rowToArticle);
+        notifyListeners();
+      }
+
+      initialized = true;
+
+      // Subscribe to realtime changes
+      supabase
+        .channel('news_articles_changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'news_articles' },
+          async () => {
+            const { data: freshData } = await supabase!
+              .from('news_articles')
+              .select('*')
+              .order('id', { ascending: true });
+            if (freshData && freshData.length > 0) {
+              articlesCache = freshData.map(rowToArticle);
+            }
+            notifyListeners();
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.error('Failed to init news store:', err);
+      initialized = true;
+    }
+  })();
+
+  return initPromise;
+}
+
+// Kick off init immediately when module loads
+initNewsStore();
+
 export function getAllArticles(): NewsArticle[] {
-  return initializeStore();
+  return [...articlesCache];
 }
 
 export function getArticleById(id: number): NewsArticle | undefined {
-  const articles = initializeStore();
-  return articles.find((a) => a.id === id);
+  return articlesCache.find((a) => a.id === id);
 }
 
-export function addArticle(article: Omit<NewsArticle, 'id'>): NewsArticle {
-  const articles = initializeStore();
-  const maxId = articles.reduce((max, a) => Math.max(max, a.id), 0);
-  const newArticle: NewsArticle = { ...article, id: maxId + 1 };
-  articles.unshift(newArticle);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+export async function addArticle(article: Omit<NewsArticle, 'id'>): Promise<NewsArticle> {
+  if (!supabase) {
+    const maxId = articlesCache.reduce((max, a) => Math.max(max, a.id), 0);
+    const newArticle: NewsArticle = { ...article, id: maxId + 1 };
+    articlesCache.unshift(newArticle);
+    notifyListeners();
+    return newArticle;
+  }
+
+  const row = articleToRow(article);
+  const { data, error } = await supabase
+    .from('news_articles')
+    .insert(row)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Failed to add article:', error);
+    throw error;
+  }
+
+  const newArticle = rowToArticle(data);
+  articlesCache.unshift(newArticle);
   notifyListeners();
   return newArticle;
 }
 
-export function updateArticle(id: number, updates: Partial<Omit<NewsArticle, 'id'>>): NewsArticle | null {
-  const articles = initializeStore();
-  const idx = articles.findIndex((a) => a.id === id);
-  if (idx === -1) return null;
-  articles[idx] = { ...articles[idx], ...updates };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+export async function updateArticle(id: number, updates: Partial<Omit<NewsArticle, 'id'>>): Promise<NewsArticle | null> {
+  if (!supabase) {
+    const idx = articlesCache.findIndex((a) => a.id === id);
+    if (idx === -1) return null;
+    articlesCache[idx] = { ...articlesCache[idx], ...updates };
+    notifyListeners();
+    return articlesCache[idx];
+  }
+
+  const dbUpdates: Record<string, unknown> = {};
+  if (updates.date !== undefined) dbUpdates.date = updates.date;
+  if (updates.title !== undefined) dbUpdates.title = updates.title;
+  if (updates.image !== undefined) dbUpdates.image = updates.image;
+  if (updates.excerpt !== undefined) dbUpdates.excerpt = updates.excerpt;
+  if (updates.category !== undefined) dbUpdates.category = updates.category;
+  if (updates.readTime !== undefined) dbUpdates.read_time = updates.readTime;
+  if (updates.author !== undefined) dbUpdates.author = updates.author;
+  if (updates.content !== undefined) dbUpdates.content = updates.content;
+  dbUpdates.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('news_articles')
+    .update(dbUpdates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Failed to update article:', error);
+    throw error;
+  }
+
+  const updated = rowToArticle(data);
+  const idx = articlesCache.findIndex((a) => a.id === id);
+  if (idx !== -1) articlesCache[idx] = updated;
   notifyListeners();
-  return articles[idx];
+  return updated;
 }
 
-export function deleteArticle(id: number): boolean {
-  const articles = initializeStore();
-  const filtered = articles.filter((a) => a.id !== id);
-  if (filtered.length === articles.length) return false;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+export async function deleteArticle(id: number): Promise<boolean> {
+  if (!supabase) {
+    const filtered = articlesCache.filter((a) => a.id !== id);
+    if (filtered.length === articlesCache.length) return false;
+    articlesCache = filtered;
+    notifyListeners();
+    return true;
+  }
+
+  const { error } = await supabase
+    .from('news_articles')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Failed to delete article:', error);
+    return false;
+  }
+
+  articlesCache = articlesCache.filter((a) => a.id !== id);
   notifyListeners();
   return true;
 }
 
 export function resetToDefaults(): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultArticles));
+  articlesCache = [...defaultArticles];
   notifyListeners();
 }

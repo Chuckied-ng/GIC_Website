@@ -128,12 +128,12 @@ const AdminDashboard = () => {
     setMode('edit');
   };
 
-  const handleDelete = (id: number) => {
-    deleteArticle(id);
+  const handleDelete = async (id: number) => {
+    await deleteArticle(id);
     setDeleteConfirm(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title || !form.excerpt || !form.category || !form.author) {
       setSaveMessage('Please fill in all required fields.');
       setTimeout(() => setSaveMessage(''), 3000);
@@ -141,10 +141,10 @@ const AdminDashboard = () => {
     }
 
     if (mode === 'create') {
-      addArticle(form);
+      await addArticle(form);
       setSaveMessage('Article created successfully!');
     } else if (mode === 'edit' && editingId !== null) {
-      updateArticle(editingId, form);
+      await updateArticle(editingId, form);
       setSaveMessage('Article updated successfully!');
     }
 
@@ -168,12 +168,12 @@ const AdminDashboard = () => {
     setMode('edit');
   };
 
-  const handleDeleteProject = (id: number) => {
-    deleteProject(id);
+  const handleDeleteProject = async (id: number) => {
+    await deleteProject(id);
     setDeleteConfirm(null);
   };
 
-  const handleSaveProject = () => {
+  const handleSaveProject = async () => {
     if (!projectForm.title || !projectForm.category || !projectForm.location || !projectForm.scope) {
       setSaveMessage('Please fill in all required fields.');
       setTimeout(() => setSaveMessage(''), 3000);
@@ -181,10 +181,10 @@ const AdminDashboard = () => {
     }
 
     if (mode === 'create') {
-      addProject(projectForm);
+      await addProject(projectForm);
       setSaveMessage('Project created successfully!');
     } else if (mode === 'edit' && editingId !== null) {
-      updateProject(editingId, projectForm);
+      await updateProject(editingId, projectForm);
       setSaveMessage('Project updated successfully!');
     }
 

@@ -1,4 +1,22 @@
-// Projects data store with localStorage persistence
+// Projects data store — uses Supabase as source of truth so all changes
+// are immediately visible to every visitor, not just the browser that made them.
+
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+let supabase: SupabaseClient | null = null;
+
+try {
+  if (supabaseUrl && supabaseAnonKey) {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  } else {
+    console.warn('Supabase credentials not found. Projects will use defaults.');
+  }
+} catch (err) {
+  console.error('Failed to create Supabase client for projects:', err);
+}
 
 export interface Project {
   id: number;
@@ -12,9 +30,33 @@ export interface Project {
   status: 'Completed' | 'Ongoing';
 }
 
-const STORAGE_KEY = 'gic_projects';
-const STORAGE_VERSION = 'v2';
-const VERSION_KEY = 'gic_projects_version';
+// DB row is the same shape, just need status type handling
+function rowToProject(row: Record<string, unknown>): Project {
+  return {
+    id: row.id as number,
+    title: row.title as string,
+    category: row.category as string,
+    location: row.location as string,
+    year: row.year as string,
+    value: row.value as string,
+    scope: row.scope as string,
+    image: row.image as string,
+    status: (row.status as string) === 'Ongoing' ? 'Ongoing' : 'Completed',
+  };
+}
+
+function projectToRow(project: Omit<Project, 'id'>) {
+  return {
+    title: project.title,
+    category: project.category,
+    location: project.location,
+    year: project.year,
+    value: project.value,
+    scope: project.scope,
+    image: project.image,
+    status: project.status,
+  };
+}
 
 const defaultProjects: Project[] = [
   {
@@ -85,27 +127,10 @@ const defaultProjects: Project[] = [
   },
 ];
 
-// Initialize store with defaults if empty or version mismatch
-function initializeStore(): Project[] {
-  const storedVersion = localStorage.getItem(VERSION_KEY);
-  if (storedVersion !== STORAGE_VERSION) {
-    // New deployment - reset to latest defaults
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProjects));
-    localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
-    return defaultProjects;
-  }
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProjects));
-    return defaultProjects;
-  }
-  try {
-    return JSON.parse(stored);
-  } catch {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProjects));
-    return defaultProjects;
-  }
-}
+// In-memory cache populated from Supabase on init
+let projectsCache: Project[] = [...defaultProjects];
+let initialized = false;
+let initPromise: Promise<void> | null = null;
 
 // Event system for cross-component reactivity
 const listeners: Set<() => void> = new Set();
@@ -119,45 +144,155 @@ export function subscribeToProjects(fn: () => void) {
   return () => listeners.delete(fn);
 }
 
+// Initialize from Supabase
+export function initProjectsStore(): Promise<void> {
+  if (initialized) return Promise.resolve();
+  if (initPromise) return initPromise;
+
+  if (!supabase) {
+    initialized = true;
+    return Promise.resolve();
+  }
+
+  initPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) {
+        console.error('Failed to fetch projects:', error.message);
+      }
+
+      if (data && data.length > 0) {
+        console.log(`Loaded ${data.length} projects from database`);
+        projectsCache = data.map(rowToProject);
+        notifyListeners();
+      }
+
+      initialized = true;
+
+      // Subscribe to realtime changes
+      supabase
+        .channel('projects_changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'projects' },
+          async () => {
+            const { data: freshData } = await supabase!
+              .from('projects')
+              .select('*')
+              .order('id', { ascending: true });
+            if (freshData && freshData.length > 0) {
+              projectsCache = freshData.map(rowToProject);
+            }
+            notifyListeners();
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.error('Failed to init projects store:', err);
+      initialized = true;
+    }
+  })();
+
+  return initPromise;
+}
+
+// Kick off init immediately when module loads
+initProjectsStore();
+
 export function getAllProjects(): Project[] {
-  return initializeStore();
+  return [...projectsCache];
 }
 
 export function getProjectById(id: number): Project | undefined {
-  const projects = initializeStore();
-  return projects.find((p) => p.id === id);
+  return projectsCache.find((p) => p.id === id);
 }
 
-export function addProject(project: Omit<Project, 'id'>): Project {
-  const projects = initializeStore();
-  const maxId = projects.reduce((max, p) => Math.max(max, p.id), 0);
-  const newProject: Project = { ...project, id: maxId + 1 };
-  projects.unshift(newProject);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+export async function addProject(project: Omit<Project, 'id'>): Promise<Project> {
+  if (!supabase) {
+    const maxId = projectsCache.reduce((max, p) => Math.max(max, p.id), 0);
+    const newProject: Project = { ...project, id: maxId + 1 };
+    projectsCache.unshift(newProject);
+    notifyListeners();
+    return newProject;
+  }
+
+  const row = projectToRow(project);
+  const { data, error } = await supabase
+    .from('projects')
+    .insert(row)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Failed to add project:', error);
+    throw error;
+  }
+
+  const newProject = rowToProject(data);
+  projectsCache.unshift(newProject);
   notifyListeners();
   return newProject;
 }
 
-export function updateProject(id: number, updates: Partial<Omit<Project, 'id'>>): Project | null {
-  const projects = initializeStore();
-  const idx = projects.findIndex((p) => p.id === id);
-  if (idx === -1) return null;
-  projects[idx] = { ...projects[idx], ...updates };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+export async function updateProject(id: number, updates: Partial<Omit<Project, 'id'>>): Promise<Project | null> {
+  if (!supabase) {
+    const idx = projectsCache.findIndex((p) => p.id === id);
+    if (idx === -1) return null;
+    projectsCache[idx] = { ...projectsCache[idx], ...updates };
+    notifyListeners();
+    return projectsCache[idx];
+  }
+
+  const dbUpdates: Record<string, unknown> = { ...updates, updated_at: new Date().toISOString() };
+  
+  const { data, error } = await supabase
+    .from('projects')
+    .update(dbUpdates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Failed to update project:', error);
+    throw error;
+  }
+
+  const updated = rowToProject(data);
+  const idx = projectsCache.findIndex((p) => p.id === id);
+  if (idx !== -1) projectsCache[idx] = updated;
   notifyListeners();
-  return projects[idx];
+  return updated;
 }
 
-export function deleteProject(id: number): boolean {
-  const projects = initializeStore();
-  const filtered = projects.filter((p) => p.id !== id);
-  if (filtered.length === projects.length) return false;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+export async function deleteProject(id: number): Promise<boolean> {
+  if (!supabase) {
+    const filtered = projectsCache.filter((p) => p.id !== id);
+    if (filtered.length === projectsCache.length) return false;
+    projectsCache = filtered;
+    notifyListeners();
+    return true;
+  }
+
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Failed to delete project:', error);
+    return false;
+  }
+
+  projectsCache = projectsCache.filter((p) => p.id !== id);
   notifyListeners();
   return true;
 }
 
 export function resetProjectsToDefaults(): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProjects));
+  projectsCache = [...defaultProjects];
   notifyListeners();
 }

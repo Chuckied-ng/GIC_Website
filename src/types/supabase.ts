@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      news_articles: {
+        Row: {
+          author: string
+          category: string
+          content: Json
+          created_at: string | null
+          date: string
+          excerpt: string
+          id: number
+          image: string
+          read_time: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string
+          category?: string
+          content?: Json
+          created_at?: string | null
+          date: string
+          excerpt?: string
+          id?: number
+          image?: string
+          read_time?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string
+          category?: string
+          content?: Json
+          created_at?: string | null
+          date?: string
+          excerpt?: string
+          id?: number
+          image?: string
+          read_time?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: number
+          image: string
+          location: string
+          scope: string
+          status: string
+          title: string
+          updated_at: string | null
+          value: string
+          year: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          id?: number
+          image?: string
+          location?: string
+          scope?: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          value?: string
+          year?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: number
+          image?: string
+          location?: string
+          scope?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          value?: string
+          year?: string
+        }
+        Relationships: []
+      }
       site_images: {
         Row: {
           key: string
