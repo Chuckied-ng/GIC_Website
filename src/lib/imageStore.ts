@@ -1,12 +1,22 @@
 // Centralized image store — uses Supabase as source of truth so all changes
 // are immediately visible to every visitor, not just the browser that made them.
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string
-);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+let supabase: SupabaseClient | null = null;
+
+try {
+  if (supabaseUrl && supabaseAnonKey) {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  } else {
+    console.warn('Supabase credentials not found. Images will use defaults.');
+  }
+} catch (err) {
+  console.error('Failed to create Supabase client:', err);
+}
 
 export interface SiteImage {
   key: string;
@@ -151,15 +161,32 @@ export function initImageStore(): Promise<void> {
   if (initialized) return Promise.resolve();
   if (initPromise) return initPromise;
 
-  initPromise = supabase
-    .from('site_images')
-    .select('key, url')
-    .then(({ data }) => {
-      if (data) {
-        data.forEach(({ key, url }: { key: string; url: string }) => {
-          imageCache[key] = url;
-        });
+  if (!supabase) {
+    initialized = true;
+    return Promise.resolve();
+  }
+
+  initPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_images')
+        .select('key, url');
+
+      if (error) {
+        console.error('Failed to fetch site images:', error.message);
       }
+
+      if (data && data.length > 0) {
+        console.log(`Loaded ${data.length} image overrides from database`);
+        data.forEach(({ key, url }: { key: string; url: string }) => {
+          if (url) {
+            imageCache[key] = url;
+          }
+        });
+        // Notify all listeners that images have been loaded
+        notifyListeners('all', '');
+      }
+
       initialized = true;
 
       // Subscribe to realtime changes
@@ -175,16 +202,19 @@ export function initImageStore(): Promise<void> {
               notifyListeners(key, imageCache[key]);
             } else {
               const { key, url } = payload.new as { key: string; url: string };
-              imageCache[key] = url;
-              notifyListeners(key, url);
+              if (url) {
+                imageCache[key] = url;
+                notifyListeners(key, url);
+              }
             }
           }
         )
         .subscribe();
-    })
-    .catch((err) => {
+    } catch (err) {
       console.error('Failed to init image store:', err);
-    });
+      initialized = true; // Mark as initialized even on error to not block the app
+    }
+  })();
 
   return initPromise;
 }
@@ -203,6 +233,11 @@ export async function setImage(key: string, url: string): Promise<void> {
   imageCache[key] = url;
   notifyListeners(key, url);
 
+  if (!supabase) {
+    console.warn('Supabase not available, image saved locally only');
+    return;
+  }
+
   const { error } = await supabase
     .from('site_images')
     .upsert({ key, url, updated_at: new Date().toISOString() });
@@ -215,8 +250,9 @@ export async function setImage(key: string, url: string): Promise<void> {
 
 // Upload a file to Supabase Storage via edge function and persist the public URL
 export async function uploadImage(key: string, file: File): Promise<string> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase credentials not configured');
+  }
 
   const formData = new FormData();
   formData.append('file', file);
@@ -252,7 +288,9 @@ export async function uploadImage(key: string, file: File): Promise<string> {
 export async function resetImage(key: string): Promise<void> {
   imageCache[key] = defaultImages[key] || '';
   notifyListeners(key, imageCache[key]);
-  await supabase.from('site_images').delete().eq('key', key);
+  if (supabase) {
+    await supabase.from('site_images').delete().eq('key', key);
+  }
 }
 
 // Reset all images to defaults
@@ -261,7 +299,9 @@ export async function resetAllImages(): Promise<void> {
     imageCache[key] = defaultImages[key];
   });
   notifyListeners('all', '');
-  await supabase.from('site_images').delete().neq('key', '');
+  if (supabase) {
+    await supabase.from('site_images').delete().neq('key', '');
+  }
 }
 
 // Get all images (from cache)
