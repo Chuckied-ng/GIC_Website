@@ -38,17 +38,26 @@ const Contact = () => {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     setSubmitStatus('idle');
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    console.log('Form submitted:', data);
-    setIsSubmitting(false);
-    setSubmitStatus('success');
-    reset();
-    
-    // Reset success message after 5 seconds
-    setTimeout(() => setSubmitStatus('idle'), 5000);
+
+    try {
+      const subject = encodeURIComponent(
+        `Enquiry from ${data.name} – ${data.service.charAt(0).toUpperCase() + data.service.slice(1)} Services`
+      );
+      const body = encodeURIComponent(
+        `Name: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\nCompany: ${data.company}\nService Interest: ${data.service}\n\nProject Details:\n${data.message}`
+      );
+      window.location.href = `mailto:info@gicoilgas.com?subject=${subject}&body=${body}`;
+
+      setIsSubmitting(false);
+      setSubmitStatus('success');
+      reset();
+
+      // Reset success message after 5 seconds
+      setTimeout(() => setSubmitStatus('idle'), 5000);
+    } catch {
+      setIsSubmitting(false);
+      setSubmitStatus('error');
+    }
   };
 
   return (
@@ -90,9 +99,24 @@ const Contact = () => {
                     <div>
                       <div className="font-medium text-slate-900 mb-1">Head Office</div>
                       <div className="text-gray-600 text-sm">
-                        Plot 123, Industrial Area<br />
-                        Trans Amadi, Port Harcourt<br />
-                        Rivers State, Nigeria
+                        4B Modupe Odunlami Street,<br />
+                        off T.F Kuboye Street, Oniru,<br />
+                        Victoria Island, Lagos State
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center flex-shrink-0">
+                      <MapPin className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900 mb-1">Base Office</div>
+                      <div className="text-gray-600 text-sm">
+                        Ogbakiri Base Yard,<br />
+                        Port Harcourt - Bayelsa Expressway<br />
+                        by former Wilbross Yard, Uni-Port,<br />
+                        Port Harcourt, Rivers State
                       </div>
                     </div>
                   </div>
@@ -104,8 +128,7 @@ const Contact = () => {
                     <div>
                       <div className="font-medium text-slate-900 mb-1">Phone</div>
                       <div className="text-gray-600 text-sm">
-                        +234 (0) 123 456 7890<br />
-                        +234 (0) 987 654 3210
+                        +234 909 838 0202
                       </div>
                     </div>
                   </div>
@@ -139,24 +162,7 @@ const Contact = () => {
                 </div>
               </div>
 
-              {/* Regional Offices */}
-              <div className="pt-8 border-t border-gray-200">
-                <h3 className="font-medium text-slate-900 mb-4">Regional Offices</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                  <div>
-                    <div className="font-medium text-slate-900">Lagos Office</div>
-                    <div>Victoria Island, Lagos</div>
-                  </div>
-                  <div>
-                    <div className="font-medium text-slate-900">Warri Office</div>
-                    <div>Effurun, Delta State</div>
-                  </div>
-                  <div>
-                    <div className="font-medium text-slate-900">Abuja Office</div>
-                    <div>Central Business District, Abuja</div>
-                  </div>
-                </div>
-              </div>
+
             </div>
 
             {/* Contact Form */}
@@ -168,8 +174,8 @@ const Contact = () => {
                   <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start space-x-3">
                     <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-medium text-green-900">Message sent successfully!</div>
-                      <div className="text-sm text-green-700">We'll get back to you within 24 hours.</div>
+                      <div className="font-medium text-green-900">Your email client is ready to send!</div>
+                      <div className="text-sm text-green-700">Your enquiry is addressed to info@gicoilgas.com. We'll get back to you within 24 hours.</div>
                     </div>
                   </div>
                 )}
