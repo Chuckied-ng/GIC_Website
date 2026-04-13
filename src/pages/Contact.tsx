@@ -46,7 +46,7 @@ const Contact = () => {
       const body = encodeURIComponent(
         `Name: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\nCompany: ${data.company}\nService Interest: ${data.service}\n\nProject Details:\n${data.message}`
       );
-      window.location.href = `mailto:info@gicoilgas.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:info@gicoil.com?subject=${subject}&body=${body}`;
 
       setIsSubmitting(false);
       setSubmitStatus('success');
@@ -140,8 +140,8 @@ const Contact = () => {
                     <div>
                       <div className="font-medium text-slate-900 mb-1">Email</div>
                       <div className="text-gray-600 text-sm">
-                        info@gicoilgas.com<br />
-                        projects@gicoilgas.com
+                        info@gicoil.com<br />
+                        projects@gicoil.com
                       </div>
                     </div>
                   </div>
@@ -175,7 +175,7 @@ const Contact = () => {
                     <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <div className="font-medium text-green-900">Your email client is ready to send!</div>
-                      <div className="text-sm text-green-700">Your enquiry is addressed to info@gicoilgas.com. We'll get back to you within 24 hours.</div>
+                      <div className="text-sm text-green-700">Your enquiry is addressed to info@gicoil.com. We'll get back to you within 24 hours.</div>
                     </div>
                   </div>
                 )}
